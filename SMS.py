@@ -15,8 +15,8 @@ import requests
 #查詢歷史紀錄
 # Url = 'https://{DoMain}/API21/HTTP/GetDeliveryStatus.ashx'.format(DoMain='api.e8d.tw')
 # tmp = requests.post(Url, data={
-#     'UID': '0972153032',
-#     'PWD': '~!QAZ2wsx',
+#     'UID': '',
+#     'PWD': '',
 #     'BID': '6a8c8ad1-f7c3-42e9-80b1-2f605ff56cc6',
 #     'PNO': 1,
 #     'RESPFORMAT': 1
