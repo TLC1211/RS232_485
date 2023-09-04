@@ -1,13 +1,9 @@
 import json
-
 import pymysql
 import uuid
-
-from datetime import  datetime
 import time
-print(time.time())#timestamp
-Int_TimeStamp = int(time.time())
-print(datetime.fromtimestamp(Int_TimeStamp).strftime('%Y-%m-%d %H:%M:%S'))
+from datetime import  datetime
+
 db = pymysql.connect(
     host="127.0.0.1", port=3306,#192.168.137.1為本機IP，3306為MySQL用
     user="PLC", password="123123123",
@@ -518,16 +514,77 @@ db.autocommit = True
 
 #從bit.cells讀回M5
 #數據集合為{"NotifyType": 1, "NotifyPlatFrom": 2, "NotifyTimeStamp": 0, "NotifyDateTime": 0}
-with db.cursor() as cursor:
-    # command = "SELECT * FROM `test` where `PostalCode` <= 303"
-    command = "SELECT * FROM `bit_cells`" #取回graphiccontrrol下bit.cells表格所有資料
-    cursor.execute(command)#執行command
-    # db.commit() #insert、update、delete才需要使用讀回資料不需要
-    for i in cursor.fetchall():
-        if i[1] == "M5" and i[7] == 1:
-            collecdata = json.loads(i[8])
-            NotifyType = int(collecdata["NotifyType"])
-            NotifyPlatFrom = int(collecdata["NotifyPlatFrom"])
-            if NotifyType == 1 and NotifyPlatFrom == 2:
-                print("LINE")
-    db.close()
+# with db.cursor() as cursor:
+#     # command = "SELECT * FROM `test` where `PostalCode` <= 303"
+#     command = "SELECT * FROM `bit_cells`" #取回graphiccontrrol下bit.cells表格所有資料
+#     cursor.execute(command)#執行command
+#     # db.commit() #insert、update、delete才需要使用讀回資料不需要
+#     for i in cursor.fetchall():
+#         if i[1] == "M5" and i[7] == 1:
+#             collecdata = json.loads(i[8])
+#             NotifyType = int(collecdata["NotifyType"])
+#             NotifyPlatFrom = int(collecdata["NotifyPlatFrom"])
+#             if NotifyType == 1 and NotifyPlatFrom == 2:
+#                 print("LINE")
+#     db.close()
+
+#執行N次的程式，回傳狀態(SMS、Email、LINE)
+# while True:
+#     Int_TimeStamp = int(time.time())
+#     systime = datetime.fromtimestamp(Int_TimeStamp).strftime('%Y-%m-%d %H:%M:%S')
+#     with db.cursor() as cursor:
+#         command = "select * from `bit_cells`"
+#         db.commit()
+#         cursor.execute(command)
+#         vals = cursor.fetchall()
+#         for i in vals:
+#             if i[7] == 1:
+#                 collectdata = json.loads(i[8])
+#                 notifytype = int(collectdata["NotifyType"])
+#                 notifyplatfrom = int(collectdata["NotifyPlatFrom"])
+#                 if notifytype == 1 and notifyplatfrom == 0:
+#                     print(i[1], "SMS", systime)
+#                 elif notifytype == 1 and notifyplatfrom == 1:
+#                     print(i[1], "Email", systime)
+#                 elif notifytype == 1 and notifyplatfrom == 2:
+#                     print(i[1], "LINE", systime)
+#                 else:
+#                     print("None")
+#     time.sleep(1)
+
+#--------------------------------------------------------------------------------------------
+#Python + MySQL
+
+#Python + MySQL + RS485
+# PLC通訊參數設定
+import minimalmodbus
+import time
+c = minimalmodbus.Instrument(port="COM5", slaveaddress=1)
+c.serial.baudrate = 9600
+c.serial.bytesize = 7
+c.serial.parity = "E"
+c.serial.stopbits = 1
+c.serial.timeout = 1
+c.mode = minimalmodbus.MODE_ASCII
+# c.mode = minimalmodbus.MODE_RTU
+c.clear_buffers_before_each_transaction = True
+c.close_port_after_each_call = True
+start_time = time.time()
+
+def readaddress (address):
+    return c.read_bit(
+        registeraddress=int(address, 16),
+        functioncode=2
+    )
+while True:
+    Int_TimeStamp = int(time.time())
+    systime = datetime.fromtimestamp(Int_TimeStamp).strftime('%Y-%m-%d %H:%M:%S')
+    #上傳PLC資料至SQL
+    # 取回所有
+    with db.cursor() as cursor:
+        command = "SELECT * FROM `bit_cells`"
+        cursor.execute(command)
+        db.commit()
+        for n in cursor.fetchall():
+            print(n)
+    time.sleep(1)
